@@ -9,7 +9,13 @@ async function main() {
   const provider = new ethers.providers.JsonRpcBatchProvider(
     process.env.NETWORK_URL,
   )
-  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider)
+  //   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider)
+  const encryptedJsonKey = fs.readFileSync('./.encryptedKey.json', 'utf-8')
+  let wallet = await ethers.Wallet.fromEncryptedJsonSync(
+    encryptedJsonKey,
+    process.env.PRIVATE_KEY_PASSWORD,
+  )
+  wallet = await wallet.connect(provider)
   const abi = fs.readFileSync('./SimpleStorage_sol_SimpleStorage.abi', 'utf-8')
   const bin = fs.readFileSync('./SimpleStorage_sol_SimpleStorage.bin', 'utf-8')
   // create contract factory
@@ -20,12 +26,12 @@ async function main() {
   const myFavouriteNumber = await contract.retrieve()
 
   console.log(
-    `\nCurrent favourite number is : ${BigInt(myFavouriteNumber)}\n\n`,
+    `\nCurrent favourite number is : ${String(myFavouriteNumber)}\n\n`,
   )
   const transactionResponse = await contract.store('7')
   const transactionReceipt = await transactionResponse.wait(1)
   const updatedFavouriteNumber = await contract.retrieve()
-  console.log(`Updated Favourite number is : ${BigInt(updatedFavouriteNumber)}`)
+  console.log(`Updated Favourite number is : ${String(updatedFavouriteNumber)}`)
 
   //   console.log('Here is the deployment transaction (transaction response)!!!')
   //   console.log(contract.deployTransaction)
